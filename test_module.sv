@@ -32,7 +32,15 @@ logic out_valid_3_reg;
 
 
 enum bit[3:0] {ST_IDLE,ST_0,ST_1,ST_1_CHNG,ST_2,ST_2_CHNG,ST_3,ST_3_CHNG} state,next_state;
-
+/*
+Конечный автомат для обработки очередного входного значения data_in;
+На следующий такт после перехода сброса в 0 переходит с состояние S_0;
+S_0 - прием первого значения data_in после сброса;
+ST_1_CHNG - прием нового значения data_in, если активен только out_valid_0_reg
+или запись в out_0_reg значения data_in, а в out_0_reg значения out_1_reg, если 
+(out_0_reg!=data_in && out_1_reg==data_in);
+логика следующих состояний схода с вышеописанной 
+*/
 always_ff @(posedge clk_in )
 begin
 	if(reset_in)
@@ -40,6 +48,7 @@ begin
 	else
 		state <= next_state;
 end
+
 
 always_comb
 begin
@@ -111,6 +120,11 @@ begin
 	endcase
 end
 
+
+/*
+Реализация задержки, что бы  было соответствие условию и сортировки для 
+избежания одинаковых значения на нескольких выходах
+*/
 always_ff @(posedge clk_in )
 begin
 	if(reset_in)
