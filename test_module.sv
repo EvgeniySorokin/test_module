@@ -33,7 +33,7 @@ logic out_valid_3_reg;
 
 enum bit[3:0] {ST_IDLE,ST_0,ST_1,ST_1_CHNG,ST_2,ST_2_CHNG,ST_3,ST_3_CHNG} state,next_state;
 
-always_ff @(posedge clk_in or posedge reset_in)
+always_ff @(posedge clk_in )
 begin
 	if(reset_in)
 		state <= ST_IDLE;
@@ -111,7 +111,7 @@ begin
 	endcase
 end
 
-always_ff @(posedge clk_in or posedge reset_in)
+always_ff @(posedge clk_in )
 begin
 	if(reset_in)
 	begin
