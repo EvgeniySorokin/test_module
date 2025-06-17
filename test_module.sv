@@ -44,80 +44,66 @@ ST_1_CHNG - прием нового значения data_in, если акти�
 always_ff @(posedge clk_in )
 begin
 	if(reset_in)
+	begin
 		state <= ST_IDLE;
-	else
+		
+	end else
 		state <= next_state;
 end
 
 
 always_comb
 begin
-	case(state )
-		ST_IDLE:
-		    if(reset_in)
-		         next_state = ST_IDLE;
-		    else  
-			     next_state = ST_0;
-		ST_0:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(data_in_reg!=data_in)
-				next_state = ST_1_CHNG;
-			else
-				next_state = ST_0;
-		ST_1:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(out_0_reg!=data_in && out_1_reg!=data_in)
-				next_state = ST_2_CHNG;
-			else if(out_0_reg!=data_in)
-				next_state = ST_1_CHNG;
-			else
-				next_state = ST_1;
-		ST_1_CHNG:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(data_in_reg != data_in && out_0_reg!=data_in && out_1_reg!=data_in)
-				next_state = ST_2_CHNG;
-			else if(data_in_reg != data_in)
-				next_state = ST_1_CHNG;
-			else	
-				next_state = ST_1;
-		ST_2:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(out_0_reg!=data_in  && out_1_reg!=data_in && out_2_reg!=data_in)
-				next_state = ST_3_CHNG;
-			else if(out_0_reg!=data_in)
-				next_state = ST_2_CHNG;
-			else
-				next_state = ST_2;
-		ST_2_CHNG:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(data_in_reg != data_in && out_0_reg!=data_in && out_1_reg!=data_in && out_2_reg!=data_in)
-				next_state = ST_3_CHNG;
-			else if(data_in_reg != data_in)
-				next_state = ST_2_CHNG;
-			else
-				next_state = ST_2;
-		ST_3:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(out_0_reg!=data_in)
-				next_state = ST_3_CHNG;
-			else
-				next_state = ST_3;
-		ST_3_CHNG:
-		    if(reset_in)
-		        next_state<=ST_IDLE;
-			else if(data_in_reg!=data_in)
-				next_state = ST_3_CHNG;
-			else
-				next_state = ST_3;
-		default:
-			next_state = ST_IDLE;
-	endcase
+        case(state )
+            ST_IDLE:
+                next_state = ST_0;
+            ST_0:
+                if(data_in_reg!=data_in)
+                    next_state = ST_1_CHNG;
+                else
+                    next_state = ST_0;
+            ST_1:
+                if(out_0_reg!=data_in && out_1_reg!=data_in)
+                    next_state = ST_2_CHNG;
+                else if(out_0_reg!=data_in)
+                    next_state = ST_1_CHNG;
+                else
+                    next_state = ST_1;
+            ST_1_CHNG:
+                if(data_in_reg != data_in && out_0_reg!=data_in && (out_1_reg!=data_in || (!out_valid_1_reg)))
+                    next_state = ST_2_CHNG;
+                else if(data_in_reg != data_in)
+                    next_state = ST_1_CHNG;
+                else	
+                    next_state = ST_1;
+            ST_2:
+               if(out_0_reg!=data_in  && out_1_reg!=data_in && out_2_reg!=data_in)
+                    next_state = ST_3_CHNG;
+                else if(out_0_reg!=data_in)
+                    next_state = ST_2_CHNG;
+                else
+                    next_state = ST_2;
+            ST_2_CHNG:
+                if(data_in_reg != data_in && out_0_reg!=data_in && out_1_reg!=data_in && ((out_2_reg!=data_in)|| (!out_valid_2_reg)))
+                    next_state = ST_3_CHNG;
+                else if(data_in_reg != data_in)
+                    next_state = ST_2_CHNG;
+                else
+                    next_state = ST_2;
+            ST_3:
+                if(out_0_reg!=data_in)
+                    next_state = ST_3_CHNG;
+                else
+                    next_state = ST_3;
+            ST_3_CHNG:
+                if(data_in_reg!=data_in)
+                    next_state = ST_3_CHNG;
+                else
+                    next_state = ST_3;
+            default:
+                next_state = ST_IDLE;
+        endcase
+    
 end
 
 
@@ -157,7 +143,7 @@ begin
 		begin
 			out_0_reg <= data_in_reg;
 			out_1_reg <= out_0_reg;
-			if(data_in_reg!=out_1_reg)out_2_reg <= out_1_reg;
+			if(data_in_reg!=out_1_reg || !out_valid_2_reg)out_2_reg <= out_1_reg;
 			out_valid_2_reg <= 1'b1;
 		end
 		
@@ -165,22 +151,22 @@ begin
 		begin
 			out_0_reg <= data_in_reg;
 			out_1_reg <= out_0_reg;
-			if(data_in_reg!=out_1_reg)out_2_reg <= out_1_reg;
-			if(data_in_reg!=out_2_reg && data_in_reg!=out_1_reg)out_3_reg <= out_2_reg;
+			if(data_in_reg!=out_1_reg )out_2_reg <= out_1_reg;
+			if((data_in_reg!=out_2_reg && data_in_reg!=out_1_reg )|| !out_valid_3_reg)out_3_reg <= out_2_reg;
 			out_valid_3_reg <= 1'b1;
 		end
-		data_in_reg<=data_in;
-
+		
+        data_in_reg<=data_in;
 	end	
 	
 	
 end
 
 
-assign out_0 = out_0_reg;
-assign out_1 = out_1_reg;
-assign out_2 = out_2_reg;
-assign out_3 = out_3_reg;
+assign  out_0 = out_0_reg;
+assign  out_1 = out_1_reg;
+assign  out_2 = out_2_reg;
+assign  out_3 = out_3_reg;
 assign	out_valid_0 = out_valid_0_reg;
 assign	out_valid_1 = out_valid_1_reg;
 assign	out_valid_2 = out_valid_2_reg;
